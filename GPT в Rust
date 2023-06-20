@@ -1,0 +1,32 @@
+use tch::nn::{Embedding, TransformerConfig, TransformerEncoderLayer, TransformerEncoder};
+use tch::{Tensor, Device};
+
+fn main() {
+    // Configuration
+    let d_model = 512;
+    let nhead = 8;
+    let num_layers = 6;
+    let dim_feedforward = 2048;
+    let dropout = 0.1;
+    
+    // Example input
+    let input = Tensor::zeros(&[1, 10, d_model], (tch::Kind::Float, Device::cuda_if_available()));
+    
+    // Embedding layer
+    let embedding = Embedding::new(10000, d_model, Default::default());
+
+    // Transformer configuration
+    let config = TransformerConfig::new(d_model, nhead, dim_feedforward, dropout, num_layers);
+
+    // Transformer encoder layers
+    let layers: Vec<_> = (0..num_layers).map(|_| TransformerEncoderLayer::new(&config)).collect();
+
+    // Transformer encoder
+    let encoder = TransformerEncoder::new(&config, &layers, Default::default());
+
+    // Forward pass
+    let output = input.apply(&embedding).apply_t(&encoder, true);
+
+    // Print output shape
+    println!("Output shape: {:?}", output.size());
+}
